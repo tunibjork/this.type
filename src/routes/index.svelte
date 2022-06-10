@@ -1,7 +1,7 @@
 <script>
 	let correctInput = '';
 	let incorrectInput = '';
-	let allInput = '';
+	// let allInput = '';
 	let totalKeypresses = 0;
 	let correctKeypresses = 0;
 	let incorrectKeypresses = 0;
@@ -10,12 +10,13 @@
 
 	let activeError = false;
 	let typingMode = true;
-
+	let nextKey;
 	const code =
 		'function twoAdds (num) {\n\treturn function (second_num) {\n\t\treturn num + second_num;\n\t};\n};';
 	// const code = 'function {\n\treturn;\n}';
 
 	let codeArr = code.split('');
+	setNextKey();
 
 	function handleCorrectInput() {
 		const char = codeArr.shift();
@@ -25,12 +26,14 @@
 			typingMode = false;
 		}
 		updateCorrectKeypresses();
+		setNextKey();
 	}
 
 	function handleIncorrectInput(pressedKey) {
 		activeError = true;
 		incorrectInput += pressedKey;
 		updateIncorrectKeypresses();
+		setNextKey();
 	}
 
 	function updateIncorrectKeypresses() {
@@ -43,8 +46,22 @@
 		correctKeypresses += 1;
 	}
 
+	function setNextKey() {
+		if (incorrectInput) {
+			nextKey = 'Backspace';
+		} else if (codeArr[0] === '\n') {
+			nextKey = 'Enter';
+		} else if (codeArr[0] === '\t') {
+			nextKey = 'Tab';
+		} else if (codeArr[0] === ' ') {
+			nextKey = 'Space';
+		} else {
+			nextKey = codeArr[0];
+		}
+		return nextKey;
+	}
+
 	function handleKeypress(event) {
-		console.log(accuracy);
 		if (typingMode && !activeError) {
 			event.preventDefault();
 
@@ -131,6 +148,7 @@
 					incorrectInput = incorrectInput.slice(0, -1);
 					if (!incorrectInput) {
 						activeError = false;
+						setNextKey();
 					}
 					break;
 				case 'Enter':
@@ -154,30 +172,32 @@
 <svelte:window on:keydown={handleKeypress} />
 
 <!-- <h1 class="text-3xl">Type It!</h1> -->
-
 <!-- <pre class="bottom">{code}</pre> -->
-<pre class="bottom">{correctInput}{incorrectInput}{codeArr.join('')}</pre>
+
+<pre class="bottom">
+{correctInput}{incorrectInput}{codeArr.join('')}
+</pre>
 <pre class="top"><span class="correct"
 		>{correctInput}<span class="incorrect">{incorrectInput}</span></span
 	><span style="top: {enterCount * 1.5}em" class="caret" /></pre>
 
-<div>All Input: {allInput}</div>
-<div>All Input Length: {allInput.length}</div>
-<div>Correct Input: {correctInput}</div>
-<div>
-	Incorrect Input: <pre>{incorrectInput}</pre>
-</div>
-<div>Incorrect Input Length: {incorrectInput.length}</div>
+<!-- <div>All Input: {allInput}</div> -->
+<!-- <div>All Input Length: {allInput.length}</div> -->
+<!-- <div>Correct Input: {correctInput}</div> -->
+<!-- <div>Incorrect Input: {incorrectInput}</div>
+<!-- <div>Incorrect Input Length: {incorrectInput.length}</div> -->
+<div>Total Keypresses: {totalKeypresses}</div>
 <div>Correct Keypresses: {correctKeypresses}</div>
 <div>Incorrect Keypresses: {incorrectKeypresses}</div>
-<div>Total Keypresses: {totalKeypresses}</div>
-<div>Next key: <kbd>{incorrectInput ? 'Backspace' : codeArr[0]}</kbd></div>
-<div>{codeArr.length}</div>
-<div>Enter count: {enterCount}</div>
+<!-- <div>{codeArr.length}</div> -->
+<!-- <div>Enter count: {enterCount}</div> -->
 
 <div>
 	Accuracy: {accuracy ? `${Math.round(accuracy)} %` : `0 %`}
 </div>
+{#if nextKey}
+	<div>Next key: <kbd>{nextKey}</kbd></div>
+{/if}
 
 <style>
 	.bottom {
@@ -191,12 +211,13 @@
 		color: #555;
 	}
 	.caret {
-		/* transition: 0.3s; */
+		animation: blinkCaret 1.3s;
+		animation-iteration-count: infinite;
 		position: absolute;
-		/* top: 1.2em; */
+		/* right: -0.1em; */
 		width: 0.1em;
 		height: 1.5em;
-		background-color: #555;
+		background-color: #444;
 	}
 
 	pre {
@@ -226,7 +247,19 @@
 	}
 
 	.correct {
-		/* color: rgb(89, 164, 46); */
-		/* background-color: rgb(183, 255, 164); */
+		color: rgb(66, 130, 30);
+		/* background-color: rgb(183, 255,  */
+	}
+
+	@keyframes blinkCaret {
+		from {
+			opacity: 0;
+		}
+		50% {
+			opacity: 1;
+		}
+		to {
+			opacity: 0;
+		}
 	}
 </style>
