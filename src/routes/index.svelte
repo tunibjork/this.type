@@ -10,23 +10,49 @@
 
 	let activeError = false;
 	let typingMode = true;
-	let nextKey;
-	const code =
-		'function twoAdds (num) {\n\treturn function (second_num) {\n\t\treturn num + second_num;\n\t};\n};';
-	// const code = 'function {\n\treturn;\n}';
+	let timerRunning = false;
+	let startTime;
+	let endTime;
+	$: elapsedMinutes = (endTime - startTime) / 1000 / 60;
+	let nextKey = code[0];
+
+	// $: wpm = correctKeypresses / 5 / elapsedMinutes;
+	let wpm;
+	let wpmInterval;
+	// const code =
+	// 	'function twoAdds (num) {\n\treturn function (second_num) {\n\t\treturn num + second_num;\n\t};\n};';
+	const code = 'function {\n\treturn;\n}';
 
 	let codeArr = code.split('');
-	setNextKey();
+
+	function getElapsedMinutes(startTime, endTime) {
+		return (endTime - startTime) / 1000 / 60;
+	}
+
+	function calculateWpm() {
+		const minutes = getElapsedMinutes(startTime, Date.now());
+		wpm = correctKeypresses / 5 / minutes;
+	}
 
 	function handleCorrectInput() {
+		if (!timerRunning) {
+			startTime = Date.now();
+			timerRunning = true;
+			wpmInterval = setInterval(calculateWpm, 2000);
+		}
 		const char = codeArr.shift();
 		correctInput += char;
 		codeArr = codeArr;
 		if (!codeArr.length) {
 			typingMode = false;
+			timerRunning = false;
+			endTime = Date.now();
+			clearInterval(wpmInterval);
+			wpmInterval = null;
 		}
 		updateCorrectKeypresses();
 		setNextKey();
+		calculateWpm();
 	}
 
 	function handleIncorrectInput(pressedKey) {
@@ -199,16 +225,22 @@
 	<div>Next key: <kbd>{nextKey}</kbd></div>
 {/if}
 
+<div>Start time: {startTime}</div>
+<div>End time: {endTime}</div>
+<div>Elapsed seconds: {elapsedMinutes * 60}</div>
+<div>WPM: {!wpm || wpm === Infinity ? 0 : Math.round(wpm)}</div>
+
 <style>
 	.bottom {
-		color: lightgray;
+		/* background-color: #272c35; */
+		color: rgb(192, 192, 192);
 		position: relative;
 	}
 
 	.top {
 		position: absolute;
 		top: 0;
-		color: #555;
+		color: rgb(177, 69, 69);
 	}
 	.caret {
 		animation: blinkCaret 1.3s;
@@ -217,7 +249,7 @@
 		/* right: -0.1em; */
 		width: 0.1em;
 		height: 1.5em;
-		background-color: #444;
+		background-color: rgb(72, 115, 215);
 	}
 
 	pre {
@@ -247,7 +279,7 @@
 	}
 
 	.correct {
-		color: rgb(66, 130, 30);
+		color: rgb(88, 88, 88);
 		/* background-color: rgb(183, 255,  */
 	}
 
