@@ -112,7 +112,6 @@
 				case 'ArrowRight':
 				case 'ArrowUp':
 				case 'ArrowDown':
-				case 'Backspace':
 				case 'F1':
 				case 'F2':
 				case 'F3':
@@ -126,6 +125,22 @@
 				case 'F11':
 				case 'F12':
 				case 'Dead':
+					// case 'Backspace':
+					break;
+
+				case 'Backspace':
+					if (correctInput) {
+						const char = correctInput.slice(-1);
+						correctInput = correctInput.slice(0, -1);
+						codeArr = [char, ...codeArr];
+						setNextKey();
+						if (char === '\n') {
+							enterCount -= 1;
+						}
+						if (correctInput.length === 0) {
+							restart();
+						}
+					}
 					break;
 
 				case 'Enter':
