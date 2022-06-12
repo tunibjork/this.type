@@ -1,7 +1,10 @@
 <script>
+	import CodeSnippet from '../components/CodeSnippet.svelte';
+	import Accuracy from '../components/Accuracy.svelte';
+	import WordsPerMin from '../components/WordsPerMin.svelte';
+
 	let correctInput = '';
 	let incorrectInput = '';
-	// let allInput = '';
 	let totalKeypresses = 0;
 	let correctKeypresses = 0;
 	let incorrectKeypresses = 0;
@@ -13,17 +16,22 @@
 	let timerRunning = false;
 	let startTime;
 	let endTime;
-	$: elapsedMinutes = (endTime - startTime) / 1000 / 60;
 	let nextKey = code[0];
 
-	// $: wpm = correctKeypresses / 5 / elapsedMinutes;
 	let wpm;
 	let wpmInterval;
-	// const code =
-	// 	'function twoAdds (num) {\n\treturn function (second_num) {\n\t\treturn num + second_num;\n\t};\n};';
-	const code = 'function {\n\treturn;\n}';
+
+	const code =
+		'function twoAdds (num) {\n\treturn function (second_num) {\n\t\treturn num + second_num;\n\t};\n};';
+	// const code = 'function {\n\treturn;\n}';
 
 	let codeArr = code.split('');
+
+	function startTimer() {
+		startTime = Date.now();
+		timerRunning = true;
+		wpmInterval = setInterval(calculateWpm, 3000);
+	}
 
 	function getElapsedMinutes(startTime, endTime) {
 		return (endTime - startTime) / 1000 / 60;
@@ -32,13 +40,12 @@
 	function calculateWpm() {
 		const minutes = getElapsedMinutes(startTime, Date.now());
 		wpm = correctKeypresses / 5 / minutes;
+		console.log(wpm.toFixed(2));
 	}
 
 	function handleCorrectInput() {
 		if (!timerRunning) {
-			startTime = Date.now();
-			timerRunning = true;
-			wpmInterval = setInterval(calculateWpm, 2000);
+			startTimer();
 		}
 		const char = codeArr.shift();
 		correctInput += char;
@@ -52,14 +59,18 @@
 		}
 		updateCorrectKeypresses();
 		setNextKey();
-		calculateWpm();
+		if (correctInput.length > 2) {
+			calculateWpm();
+		}
 	}
 
-	function handleIncorrectInput(pressedKey) {
-		activeError = true;
-		incorrectInput += pressedKey;
-		updateIncorrectKeypresses();
-		setNextKey();
+	function handleIncorrectInput(char) {
+		if (timerRunning) {
+			activeError = true;
+			incorrectInput += char;
+			updateIncorrectKeypresses();
+			setNextKey();
+		}
 	}
 
 	function updateIncorrectKeypresses() {
@@ -89,8 +100,6 @@
 
 	function handleKeypress(event) {
 		if (typingMode && !activeError) {
-			event.preventDefault();
-
 			switch (event.key) {
 				case 'Escape':
 				case 'CapsLock':
@@ -135,6 +144,14 @@
 					}
 					break;
 
+				case ' ':
+					if (codeArr[0] === ' ') {
+						handleCorrectInput();
+					} else {
+						handleIncorrectInput(' ');
+					}
+					break;
+
 				default:
 					if (codeArr[0] === event.key) {
 						handleCorrectInput();
@@ -143,8 +160,6 @@
 					}
 			}
 		} else if (typingMode && activeError) {
-			event.preventDefault();
-
 			switch (event.key) {
 				case 'Escape':
 				case 'CapsLock':
@@ -187,6 +202,11 @@
 					updateIncorrectKeypresses();
 					break;
 
+				case ' ':
+					incorrectInput += ' ';
+					updateIncorrectKeypresses();
+					break;
+
 				default:
 					incorrectInput += event.key;
 					updateIncorrectKeypresses();
@@ -195,103 +215,100 @@
 	}
 </script>
 
-<svelte:window on:keydown={handleKeypress} />
+<svelte:window on:keydown|preventDefault={handleKeypress} />
 
-<!-- <h1 class="text-3xl">Type It!</h1> -->
-<!-- <pre class="bottom">{code}</pre> -->
+<div class="grid-container">
+	<h1 class="title">Type It!</h1>
 
-<pre class="bottom">
-{correctInput}{incorrectInput}{codeArr.join('')}
-</pre>
-<pre class="top"><span class="correct"
-		>{correctInput}<span class="incorrect">{incorrectInput}</span></span
-	><span style="top: {enterCount * 1.5}em" class="caret" /></pre>
+	<h2 class="acc-label">Accuracy</h2>
+	<div class="acc">
+		<Accuracy {accuracy} />
+	</div>
 
-<!-- <div>All Input: {allInput}</div> -->
-<!-- <div>All Input Length: {allInput.length}</div> -->
-<!-- <div>Correct Input: {correctInput}</div> -->
-<!-- <div>Incorrect Input: {incorrectInput}</div>
-<!-- <div>Incorrect Input Length: {incorrectInput.length}</div> -->
-<div>Total Keypresses: {totalKeypresses}</div>
-<div>Correct Keypresses: {correctKeypresses}</div>
-<div>Incorrect Keypresses: {incorrectKeypresses}</div>
-<!-- <div>{codeArr.length}</div> -->
-<!-- <div>Enter count: {enterCount}</div> -->
+	<h2 class="wpm-label">WPM</h2>
+	<div class="wpm">
+		<WordsPerMin {wpm} />
+	</div>
 
-<div>
-	Accuracy: {accuracy ? `${Math.round(accuracy)} %` : `0 %`}
+	{#if nextKey && typingMode}
+		<h2 class="next-key-label">Next key</h2>
+		<div class="next-key"><kbd class="kbd">{nextKey}</kbd></div>
+	{/if}
+	<div class="code-snippet">
+		<CodeSnippet {correctInput} {incorrectInput} {codeArr} {typingMode} {enterCount} />
+	</div>
 </div>
-{#if nextKey}
-	<div>Next key: <kbd>{nextKey}</kbd></div>
-{/if}
-
-<div>Start time: {startTime}</div>
-<div>End time: {endTime}</div>
-<div>Elapsed seconds: {elapsedMinutes * 60}</div>
-<div>WPM: {!wpm || wpm === Infinity ? 0 : Math.round(wpm)}</div>
 
 <style>
-	.bottom {
-		/* background-color: #272c35; */
-		color: rgb(192, 192, 192);
-		position: relative;
+	h1 {
+		font-family: 'JetBrains Mono', sans-serif;
+		font-weight: 800;
+		font-size: 3rem;
+		color: #e5c17bff;
+		margin-bottom: 2rem;
+		margin-top: 2rem;
 	}
 
-	.top {
-		position: absolute;
-		top: 0;
-		color: rgb(177, 69, 69);
-	}
-	.caret {
-		animation: blinkCaret 1.3s;
-		animation-iteration-count: infinite;
-		position: absolute;
-		/* right: -0.1em; */
-		width: 0.1em;
-		height: 1.5em;
-		background-color: rgb(72, 115, 215);
-	}
-
-	pre {
-		margin: 20px;
-		line-height: 1.5em;
-		font-family: Courier, monospace;
-		font-weight: 600;
-		font-size: larger;
-		letter-spacing: 0.05em;
-	}
-
-	kbd {
-		background-color: #eee;
-		border-radius: 4px;
+	h2 {
+		font-family: 'IBM Plex Sans', sans-serif;
 		font-size: 1rem;
-		padding: 0.2em 0.5em;
-		border-top: 5px solid rgba(255, 255, 255, 0.5);
-		border-left: 5px solid rgba(255, 255, 255, 0.5);
-		border-right: 5px solid rgba(0, 0, 0, 0.2);
-		border-bottom: 5px solid rgba(0, 0, 0, 0.2);
-		color: #555;
+		font-weight: 500;
+		align-self: flex-start;
+		justify-self: end;
+		color: #5e6a82;
+	}
+	.grid-container {
+		max-width: 1280px;
+		height: 100vh;
+		margin: 0 auto;
+		padding: 1rem;
+		display: grid;
+		grid-template-columns: 2fr 7fr 2fr;
+		grid-template-rows: auto auto auto 3.5rem 1fr auto;
+		gap: 1rem;
 	}
 
-	.incorrect {
-		color: rgb(255, 100, 100);
-		background-color: rgb(255, 200, 200);
+	.title {
+		grid-column: 2/3;
 	}
 
-	.correct {
-		color: rgb(88, 88, 88);
-		/* background-color: rgb(183, 255,  */
+	.acc-label {
+		grid-column: 1/2;
+		grid-row: 3/4;
 	}
-
-	@keyframes blinkCaret {
-		from {
-			opacity: 0;
-		}
-		50% {
-			opacity: 1;
-		}
-		to {
-			opacity: 0;
-		}
+	.acc {
+		/* margin-bottom: 2rem; */
+		grid-column: 2/3;
+		grid-row: 3/4;
+	}
+	.wpm-label {
+		grid-column: 1/2;
+		grid-row: 2/3;
+	}
+	.wpm {
+		grid-column: 2/3;
+		grid-row: 2/3;
+	}
+	.next-key-label {
+		grid-column: 1/2;
+		grid-row: 4/5;
+	}
+	.next-key {
+		font-size: 1.5em;
+		font-weight: 900;
+		justify-self: flex-start;
+		grid-column: 2/3;
+		grid-row: 4/5;
+	}
+	.code-snippet {
+		grid-column: 2/4;
+		grid-row: 5/6;
+	}
+	.kbd {
+		color: #272c35;
+		background-color: #5e6a82;
+	}
+	.hidden {
+		visibility: hidden;
 	}
 </style>
