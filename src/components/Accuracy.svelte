@@ -2,7 +2,7 @@
 	export let accuracy;
 </script>
 
-<h1>{accuracy ? `${Math.round(accuracy)}` : `100`}<span>%</span></h1>
+<h1>{accuracy ? `${Math.round(accuracy)}` : `0`}<span>{accuracy ? '%' : ''}</span></h1>
 
 <style>
 	h1 {

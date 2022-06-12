@@ -40,7 +40,8 @@
 	function calculateWpm() {
 		const minutes = getElapsedMinutes(startTime, Date.now());
 		wpm = correctKeypresses / 5 / minutes;
-		console.log(wpm.toFixed(2));
+		// console.log(wpm.toFixed(2));
+		// console.log(startTime);
 	}
 
 	function handleCorrectInput() {
@@ -213,6 +214,29 @@
 			}
 		}
 	}
+
+	function restart() {
+		timerRunning = false;
+		activeError = false;
+		typingMode = true;
+		timerRunning = false;
+
+		clearInterval(wpmInterval);
+		wpmInterval = null;
+		codeArr = code.split('');
+		correctInput = '';
+		incorrectInput = '';
+		totalKeypresses = 0;
+		correctKeypresses = 0;
+		incorrectKeypresses = 0;
+		enterCount = 0;
+
+		startTime = undefined;
+		endTime = undefined;
+
+		wpm = undefined;
+		nextKey = code[0];
+	}
 </script>
 
 <svelte:window on:keydown|preventDefault={handleKeypress} />
@@ -236,6 +260,9 @@
 	{/if}
 	<div class="code-snippet">
 		<CodeSnippet {correctInput} {incorrectInput} {codeArr} {typingMode} {enterCount} />
+	</div>
+	<div>
+		<button class="btn" on:click={restart}>Restart</button>
 	</div>
 </div>
 
@@ -310,5 +337,9 @@
 	}
 	.hidden {
 		visibility: hidden;
+	}
+	.btn {
+		grid-column: 3/4;
+		grid-row: 4/5;
 	}
 </style>
