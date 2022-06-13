@@ -1,8 +1,8 @@
 <script>
-	export let accuracy;
+	import { accuracy } from '../stores';
 </script>
 
-<h1>{accuracy ? `${Math.round(accuracy)}` : `0`}<span>{accuracy ? '%' : ''}</span></h1>
+<h1>{$accuracy ? `${Math.round($accuracy)}` : `0`}<span>{$accuracy ? '%' : ''}</span></h1>
 
 <style>
 	h1 {

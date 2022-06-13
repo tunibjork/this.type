@@ -3,105 +3,138 @@
 	import Accuracy from '../components/Accuracy.svelte';
 	import WordsPerMin from '../components/WordsPerMin.svelte';
 
-	let correctInput = '';
-	let incorrectInput = '';
-	let totalKeypresses = 0;
-	let correctKeypresses = 0;
-	let incorrectKeypresses = 0;
-	let enterCount = 0;
-	$: accuracy = (correctKeypresses / totalKeypresses) * 100;
+	import {
+		correctInput,
+		incorrectInput,
+		totalKeypresses,
+		correctKeypresses,
+		enterCount,
+		activeError,
+		typingMode,
+		timerRunning,
+		startTime,
+		codeSnippets
+		// snippet
+		// snippetArr,
+		// nextKey
+	} from '../stores';
 
-	let activeError = false;
-	let typingMode = false;
-	let timerRunning = false;
-	let startTime;
-	let endTime;
-	let nextKey = code[0];
+	// let correctInput = '';
+	// let incorrectInput = '';
+	// let totalKeypresses = 0;
+	// let correctKeypresses = 0;
+	// let incorrectKeypresses = 0;
+	// let enterCount = 0;
+	// $: accuracy = ($correctKeypresses / $totalKeypresses) * 100;
 
+	// let activeError = false;
+	// let typingMode = false;
+	// let timerRunning = false;
+	// let startTime;
+	// let endTime;
 	let wpm;
 	let wpmInterval;
 
-	const code =
-		'function twoAdds (num) {\n\treturn function (second_num) {\n\t\treturn num + second_num;\n\t};\n};';
-	// const code = 'function {\n\treturn;\n}';
-	// const code = 'this is a test';
+	let snippet;
+	let nextKey;
+	let snippetArr;
 
-	let codeArr = code.split('');
+	// const snippets = [
+	// 	`function twoAdds (num) {\n\treturn function (second_num) {\n\t\treturn num + second_num;\n\t};\n}`,
+	// 	`function reverseString (str) {\n\treturn str.split(' ').reverse().join(' ');\n}`,
+	// 	`function isPalindrome (str) {\n\treturn str === str.split('').reverse().join('')\n}`,
+	// 	`function shuffleArray (arr) {\n\treturn arr.sort(() => 0.5 - Math.random());\n}`,
+	// 	`function findUniqueValues (arr) {\n\treturn arr.filter(el => {\n\t\treturn arr.indexOf(el) === arr.lastIndexOf(el);\n\t})\n}`
+	// ];
+
+	init();
+
+	function init() {
+		const random = Math.floor(Math.random() * $codeSnippets.length);
+		snippet = $codeSnippets[random];
+		nextKey = snippet[0];
+		snippetArr = snippet.split('');
+	}
+
+	function getAnother() {
+		reset();
+		init();
+		typingMode.set(false);
+	}
 
 	function startTimer() {
-		startTime = Date.now();
-		timerRunning = true;
+		startTime.set(Date.now());
+		timerRunning.set(true);
 		wpmInterval = setInterval(calculateWpm, 3000);
 	}
 
-	function getElapsedMinutes(startTime, endTime) {
-		return (endTime - startTime) / 1000 / 60;
+	function calculateWpm() {
+		const minutes = getElapsedMinutes($startTime, Date.now());
+		wpm = $correctKeypresses / 5 / minutes;
 	}
 
-	function calculateWpm() {
-		const minutes = getElapsedMinutes(startTime, Date.now());
-		wpm = correctKeypresses / 5 / minutes;
-		// console.log(wpm.toFixed(2));
-		// console.log(startTime);
+	function getElapsedMinutes(start, end) {
+		return (end - start) / 1000 / 60;
 	}
 
 	function handleCorrectInput() {
-		if (!timerRunning) {
+		if (!$timerRunning) {
 			startTimer();
 		}
-		const char = codeArr.shift();
-		correctInput += char;
-		codeArr = codeArr;
-		if (!codeArr.length) {
-			typingMode = false;
-			timerRunning = false;
-			endTime = Date.now();
+		const char = snippetArr.shift();
+		correctInput.update((prev) => (prev += char));
+		snippetArr = snippetArr;
+		if (!snippetArr.length) {
+			typingMode.set(false);
+			timerRunning.set(false);
+			// endTime = Date.now();
 			clearInterval(wpmInterval);
 			wpmInterval = null;
 		}
 		updateCorrectKeypresses();
 		setNextKey();
-		if (correctInput.length > 2) {
+		if ($correctInput.length > 2) {
 			calculateWpm();
 		}
 	}
 
 	function handleIncorrectInput(char) {
-		if (timerRunning) {
-			activeError = true;
-			incorrectInput += char;
+		if ($timerRunning) {
+			activeError.set(true);
+			incorrectInput.update((prev) => (prev += char));
 			updateIncorrectKeypresses();
 			setNextKey();
 		}
 	}
 
 	function updateIncorrectKeypresses() {
-		totalKeypresses += 1;
-		incorrectKeypresses += 1;
+		totalKeypresses.update((nr) => (nr += 1));
+		// incorrectKeypresses += 1;
 	}
 
 	function updateCorrectKeypresses() {
-		totalKeypresses += 1;
-		correctKeypresses += 1;
+		totalKeypresses.update((nr) => (nr += 1));
+		correctKeypresses.update((nr) => (nr += 1));
 	}
 
 	function setNextKey() {
-		if (incorrectInput) {
+		if ($incorrectInput) {
 			nextKey = 'Backspace';
-		} else if (codeArr[0] === '\n') {
+		} else if (snippetArr[0] === '\n') {
 			nextKey = 'Enter';
-		} else if (codeArr[0] === '\t') {
+		} else if (snippetArr[0] === '\t') {
 			nextKey = 'Tab';
-		} else if (codeArr[0] === ' ') {
+		} else if (snippetArr[0] === ' ') {
 			nextKey = 'Space';
 		} else {
-			nextKey = codeArr[0];
+			nextKey = snippetArr[0];
 		}
 		return nextKey;
 	}
 
 	function handleKeypress(event) {
-		if (typingMode && !activeError) {
+		if ($typingMode && !$activeError) {
+			event.preventDefault();
 			switch (event.key) {
 				case 'Escape':
 				case 'CapsLock':
@@ -130,25 +163,25 @@
 					break;
 
 				case 'Backspace':
-					if (correctInput) {
-						const char = correctInput.slice(-1);
-						correctInput = correctInput.slice(0, -1);
-						codeArr = [char, ...codeArr];
-						totalKeypresses += 1;
-						correctKeypresses -= 1;
+					if ($correctInput) {
+						const char = $correctInput.slice(-1);
+						correctInput.update((prev) => prev.slice(0, -1));
+						snippetArr = [char, ...snippetArr];
+						totalKeypresses.update((nr) => (nr += 1));
+						correctKeypresses.update((nr) => (nr -= 1));
 						setNextKey();
 						if (char === '\n') {
-							enterCount -= 1;
+							enterCount.update((nr) => (nr -= 1));
 						}
-						if (correctInput.length === 0) {
-							restart();
+						if ($correctInput.length === 0) {
+							reset();
 						}
 					}
 					break;
 
 				case 'Enter':
-					if (codeArr[0] === '\n') {
-						enterCount += 1;
+					if (snippetArr[0] === '\n') {
+						enterCount.update((nr) => (nr += 1));
 						handleCorrectInput();
 					} else {
 						handleIncorrectInput(' ');
@@ -156,7 +189,7 @@
 					break;
 
 				case 'Tab':
-					if (codeArr[0] === '\t') {
+					if (snippetArr[0] === '\t') {
 						handleCorrectInput();
 					} else {
 						handleIncorrectInput(' ');
@@ -164,7 +197,7 @@
 					break;
 
 				case ' ':
-					if (codeArr[0] === ' ') {
+					if (snippetArr[0] === ' ') {
 						handleCorrectInput();
 					} else {
 						handleIncorrectInput(' ');
@@ -172,13 +205,14 @@
 					break;
 
 				default:
-					if (codeArr[0] === event.key) {
+					if (snippetArr[0] === event.key) {
 						handleCorrectInput();
 					} else {
 						handleIncorrectInput(event.key);
 					}
 			}
-		} else if (typingMode && activeError) {
+		} else if ($typingMode && $activeError) {
+			event.preventDefault();
 			switch (event.key) {
 				case 'Escape':
 				case 'CapsLock':
@@ -205,70 +239,73 @@
 				case 'Dead':
 					break;
 				case 'Backspace':
-					incorrectInput = incorrectInput.slice(0, -1);
-					if (!incorrectInput) {
-						activeError = false;
+					incorrectInput.update((prev) => prev.slice(0, -1));
+					if (!$incorrectInput) {
+						activeError.set(false);
 						setNextKey();
 					}
 					break;
 				case 'Enter':
-					incorrectInput += ' ';
+					incorrectInput.update((prev) => (prev += ' '));
 					updateIncorrectKeypresses();
 					break;
 
 				case 'Tab':
-					incorrectInput += ' ';
+					incorrectInput.update((prev) => (prev += ' '));
 					updateIncorrectKeypresses();
 					break;
 
 				case ' ':
-					incorrectInput += ' ';
+					incorrectInput.update((prev) => (prev += ' '));
 					updateIncorrectKeypresses();
 					break;
 
 				default:
-					incorrectInput += event.key;
+					incorrectInput.update((prev) => (prev += event.key));
 					updateIncorrectKeypresses();
 			}
 		}
 	}
 
-	function restart() {
-		timerRunning = false;
-		activeError = false;
-		typingMode = true;
-		timerRunning = false;
+	function reset() {
+		if ($typingMode) {
+			timerRunning.set(false);
+			activeError.set(false);
+			typingMode.set(true);
 
-		clearInterval(wpmInterval);
-		wpmInterval = null;
-		codeArr = code.split('');
-		correctInput = '';
-		incorrectInput = '';
-		totalKeypresses = 0;
-		correctKeypresses = 0;
-		incorrectKeypresses = 0;
-		enterCount = 0;
+			clearInterval(wpmInterval);
+			wpmInterval = null;
 
-		startTime = undefined;
-		endTime = undefined;
+			correctInput.set('');
+			incorrectInput.set('');
+			totalKeypresses.set(0);
+			correctKeypresses.set(0);
+			// incorrectKeypresses = 0;
+			enterCount.set(0);
 
-		wpm = undefined;
-		nextKey = code[0];
+			startTime.set();
+			// endTime = undefined;
+
+			wpm = undefined;
+
+			snippetArr = snippet.split('');
+			nextKey = snippet[0];
+		}
 	}
 
 	function start() {
-		typingMode = !typingMode;
+		typingMode.set(!$typingMode);
 	}
 </script>
 
-<svelte:window on:keydown|preventDefault={handleKeypress} />
+<svelte:window on:keydown={handleKeypress} />
 
 <div class="grid-container">
-	<h1 class="title">Type It!</h1>
+	<h1 class="title"><em>this.</em>Type()</h1>
 
 	<h2 class="acc-label">Accuracy</h2>
 	<div class="acc">
-		<Accuracy {accuracy} />
+		<Accuracy />
 	</div>
 
 	<h2 class="wpm-label">WPM</h2>
@@ -276,18 +313,21 @@
 		<WordsPerMin {wpm} />
 	</div>
 
-	{#if nextKey && typingMode}
+	{#if nextKey && $typingMode}
 		<h2 class="next-key-label">Next key</h2>
 		<div class="next-key"><kbd class="kbd">{nextKey}</kbd></div>
 	{/if}
-	<div class="code-snippet">
-		<CodeSnippet {correctInput} {incorrectInput} {codeArr} {typingMode} {enterCount} />
+	{#if !$typingMode}
+		<h2 class="instruction" on:click={start}>Click to start typing</h2>
+	{/if}
+	<div class="code-snippet" on:click={start}>
+		<CodeSnippet {snippetArr} />
 	</div>
 	<div class="restart">
-		<button class="btn btn-primary" on:click={restart}>Restart</button>
+		<button class="btn btn-primary" on:click={reset}>reset</button>
 	</div>
 	<div class="start">
-		<button class="btn btn-primary" on:click={start}>Start</button>
+		<button class="btn btn-primary" on:click={getAnother}>get new</button>
 	</div>
 </div>
 
@@ -321,6 +361,7 @@
 	}
 
 	.title {
+		justify-self: flex-start;
 		grid-column: 2/3;
 	}
 
@@ -353,8 +394,12 @@
 		grid-row: 4/5;
 	}
 	.code-snippet {
-		grid-column: 2/4;
+		justify-self: flex-start;
+		grid-column: 2/3;
 		grid-row: 5/6;
+	}
+	.code-snippet:hover {
+		cursor: pointer;
 	}
 	.kbd {
 		color: #272c35;
@@ -370,5 +415,15 @@
 	.start {
 		grid-column: 3/4;
 		grid-row: 3/4;
+	}
+	.instruction {
+		color: #e5c17bff;
+		align-self: center;
+		justify-self: center;
+		grid-column: 2/3;
+		grid-row: 4/5;
+	}
+	.instruction:hover {
+		cursor: pointer;
 	}
 </style>

@@ -1,18 +1,19 @@
 <script>
-	export let correctInput;
-	export let incorrectInput;
-	export let codeArr;
-	export let typingMode;
-	export let enterCount;
+	// export let correctInput;
+	// export let incorrectInput;
+	export let snippetArr;
+	// export let typingMode;
+	// export let enterCount;
+	import { correctInput, incorrectInput, enterCount, typingMode } from '../stores';
 </script>
 
 <code>
-	<pre class="bottom">{correctInput}{incorrectInput}{codeArr.join('')}</pre>
+	<pre class="bottom">{$correctInput}{$incorrectInput}{snippetArr.join('')}</pre>
 </code>
 <code>
 	<pre class="top"><span class="correct"
-			>{correctInput}<span class="incorrect">{incorrectInput}</span></span
-		>{#if typingMode}<span style="top: {enterCount * 1.5}em" class="caret" />{/if}</pre>
+			>{$correctInput}<span class="incorrect">{$incorrectInput}</span></span
+		>{#if $typingMode}<span style="top: {$enterCount * 1.5}em" class="caret" />{/if}</pre>
 </code>
 
 <style>
@@ -40,7 +41,7 @@
 
 	.incorrect {
 		color: #e06c75ff;
-		background-color: rgb(255, 210, 214);
+		background-color: #ffc1c6;
 	}
 
 	.caret {
