@@ -12,7 +12,7 @@
 	$: accuracy = (correctKeypresses / totalKeypresses) * 100;
 
 	let activeError = false;
-	let typingMode = true;
+	let typingMode = false;
 	let timerRunning = false;
 	let startTime;
 	let endTime;
@@ -24,6 +24,7 @@
 	const code =
 		'function twoAdds (num) {\n\treturn function (second_num) {\n\t\treturn num + second_num;\n\t};\n};';
 	// const code = 'function {\n\treturn;\n}';
+	// const code = 'this is a test';
 
 	let codeArr = code.split('');
 
@@ -133,6 +134,8 @@
 						const char = correctInput.slice(-1);
 						correctInput = correctInput.slice(0, -1);
 						codeArr = [char, ...codeArr];
+						totalKeypresses += 1;
+						correctKeypresses -= 1;
 						setNextKey();
 						if (char === '\n') {
 							enterCount -= 1;
@@ -252,6 +255,10 @@
 		wpm = undefined;
 		nextKey = code[0];
 	}
+
+	function start() {
+		typingMode = !typingMode;
+	}
 </script>
 
 <svelte:window on:keydown|preventDefault={handleKeypress} />
@@ -276,8 +283,11 @@
 	<div class="code-snippet">
 		<CodeSnippet {correctInput} {incorrectInput} {codeArr} {typingMode} {enterCount} />
 	</div>
-	<div>
-		<button class="btn" on:click={restart}>Restart</button>
+	<div class="restart">
+		<button class="btn btn-primary" on:click={restart}>Restart</button>
+	</div>
+	<div class="start">
+		<button class="btn btn-primary" on:click={start}>Start</button>
 	</div>
 </div>
 
@@ -353,8 +363,12 @@
 	.hidden {
 		visibility: hidden;
 	}
-	.btn {
+	.restart {
 		grid-column: 3/4;
-		grid-row: 4/5;
+		grid-row: 2/3;
+	}
+	.start {
+		grid-column: 3/4;
+		grid-row: 3/4;
 	}
 </style>
