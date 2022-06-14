@@ -1,8 +1,12 @@
 <script>
+	import { typingMode, finished } from '../stores';
+	// import { wpm } from '../stores';
 	export let wpm;
 </script>
 
-<h1>{!wpm || wpm === Infinity ? '0' : Math.round(wpm)}</h1>
+<h1 class={$typingMode ? '' : 'yellow'}>
+	{!wpm || wpm === Infinity ? '0' : Math.round(wpm)}
+</h1>
 
 <style>
 	h1 {
@@ -10,6 +14,9 @@
 		font-size: 2.5rem;
 		line-height: 2.5rem;
 		font-weight: bold;
-		color: #5e6a82;
+		color: #abb2bf;
+	}
+	.yellow {
+		color: #e5c17bff;
 	}
 </style>

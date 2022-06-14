@@ -9,43 +9,25 @@
 		totalKeypresses,
 		correctKeypresses,
 		enterCount,
-		activeError,
 		typingMode,
+		activeError,
+		finished,
 		timerRunning,
 		startTime,
 		codeSnippets
+		// wpmInterval
+		// wpm
 		// snippet
 		// snippetArr,
 		// nextKey
 	} from '../stores';
 
-	// let correctInput = '';
-	// let incorrectInput = '';
-	// let totalKeypresses = 0;
-	// let correctKeypresses = 0;
-	// let incorrectKeypresses = 0;
-	// let enterCount = 0;
-	// $: accuracy = ($correctKeypresses / $totalKeypresses) * 100;
-
-	// let activeError = false;
-	// let typingMode = false;
-	// let timerRunning = false;
-	// let startTime;
-	// let endTime;
-	let wpm;
 	let wpmInterval;
+	let wpm;
 
 	let snippet;
 	let nextKey;
 	let snippetArr;
-
-	// const snippets = [
-	// 	`function twoAdds (num) {\n\treturn function (second_num) {\n\t\treturn num + second_num;\n\t};\n}`,
-	// 	`function reverseString (str) {\n\treturn str.split(' ').reverse().join(' ');\n}`,
-	// 	`function isPalindrome (str) {\n\treturn str === str.split('').reverse().join('')\n}`,
-	// 	`function shuffleArray (arr) {\n\treturn arr.sort(() => 0.5 - Math.random());\n}`,
-	// 	`function findUniqueValues (arr) {\n\treturn arr.filter(el => {\n\t\treturn arr.indexOf(el) === arr.lastIndexOf(el);\n\t})\n}`
-	// ];
 
 	init();
 
@@ -56,7 +38,37 @@
 		snippetArr = snippet.split('');
 	}
 
-	function getAnother() {
+	function startTyping() {
+		if (!$finished) {
+			typingMode.set(true);
+		}
+	}
+
+	function reset() {
+		correctInput.set('');
+		incorrectInput.set('');
+		totalKeypresses.set(0);
+		correctKeypresses.set(0);
+		enterCount.set(0);
+		typingMode.set(false);
+		activeError.set(false);
+		finished.set(false);
+		startTime.set();
+		stopTimer();
+		wpm = undefined;
+	}
+
+	function resetCurrentSnippet() {
+		if ($typingMode || $finished) {
+			reset();
+			snippetArr = snippet.split('');
+			nextKey = snippet[0];
+			typingMode.set(true);
+			finished.set(false);
+		}
+	}
+
+	function getNewSnippet() {
 		reset();
 		init();
 		typingMode.set(false);
@@ -64,72 +76,19 @@
 
 	function startTimer() {
 		startTime.set(Date.now());
-		timerRunning.set(true);
 		wpmInterval = setInterval(calculateWpm, 3000);
+		timerRunning.set(true);
+	}
+
+	function stopTimer() {
+		clearInterval(wpmInterval);
+		wpmInterval = null;
+		timerRunning.set(false);
 	}
 
 	function calculateWpm() {
-		const minutes = getElapsedMinutes($startTime, Date.now());
-		wpm = $correctKeypresses / 5 / minutes;
-	}
-
-	function getElapsedMinutes(start, end) {
-		return (end - start) / 1000 / 60;
-	}
-
-	function handleCorrectInput() {
-		if (!$timerRunning) {
-			startTimer();
-		}
-		const char = snippetArr.shift();
-		correctInput.update((prev) => (prev += char));
-		snippetArr = snippetArr;
-		if (!snippetArr.length) {
-			typingMode.set(false);
-			timerRunning.set(false);
-			// endTime = Date.now();
-			clearInterval(wpmInterval);
-			wpmInterval = null;
-		}
-		updateCorrectKeypresses();
-		setNextKey();
-		if ($correctInput.length > 2) {
-			calculateWpm();
-		}
-	}
-
-	function handleIncorrectInput(char) {
-		if ($timerRunning) {
-			activeError.set(true);
-			incorrectInput.update((prev) => (prev += char));
-			updateIncorrectKeypresses();
-			setNextKey();
-		}
-	}
-
-	function updateIncorrectKeypresses() {
-		totalKeypresses.update((nr) => (nr += 1));
-		// incorrectKeypresses += 1;
-	}
-
-	function updateCorrectKeypresses() {
-		totalKeypresses.update((nr) => (nr += 1));
-		correctKeypresses.update((nr) => (nr += 1));
-	}
-
-	function setNextKey() {
-		if ($incorrectInput) {
-			nextKey = 'Backspace';
-		} else if (snippetArr[0] === '\n') {
-			nextKey = 'Enter';
-		} else if (snippetArr[0] === '\t') {
-			nextKey = 'Tab';
-		} else if (snippetArr[0] === ' ') {
-			nextKey = 'Space';
-		} else {
-			nextKey = snippetArr[0];
-		}
-		return nextKey;
+		const elapsedMinutes = (Date.now() - $startTime) / 1000 / 60;
+		wpm = $correctKeypresses / 5 / elapsedMinutes;
 	}
 
 	function handleKeypress(event) {
@@ -175,6 +134,7 @@
 						}
 						if ($correctInput.length === 0) {
 							reset();
+							typingMode.set(true);
 						}
 					}
 					break;
@@ -267,87 +227,122 @@
 		}
 	}
 
-	function reset() {
-		if ($typingMode) {
-			timerRunning.set(false);
-			activeError.set(false);
-			typingMode.set(true);
-
-			clearInterval(wpmInterval);
-			wpmInterval = null;
-
-			correctInput.set('');
-			incorrectInput.set('');
-			totalKeypresses.set(0);
-			correctKeypresses.set(0);
-			// incorrectKeypresses = 0;
-			enterCount.set(0);
-
-			startTime.set();
-			// endTime = undefined;
-
-			wpm = undefined;
-
-			snippetArr = snippet.split('');
-			nextKey = snippet[0];
+	function handleCorrectInput() {
+		if (!$timerRunning) {
+			startTimer();
+		}
+		const char = snippetArr.shift();
+		correctInput.update((prev) => (prev += char));
+		snippetArr = snippetArr;
+		if (!snippetArr.length) {
+			typingMode.set(false);
+			finished.set(true);
+			stopTimer();
+		}
+		updateCorrectKeypresses();
+		setNextKey();
+		if ($correctInput.length > 2) {
+			calculateWpm();
 		}
 	}
 
-	function start() {
-		typingMode.set(!$typingMode);
+	function updateCorrectKeypresses() {
+		totalKeypresses.update((nr) => (nr += 1));
+		correctKeypresses.update((nr) => (nr += 1));
+	}
+
+	function handleIncorrectInput(char) {
+		if ($timerRunning) {
+			activeError.set(true);
+			incorrectInput.update((prev) => (prev += char));
+			updateIncorrectKeypresses();
+			setNextKey();
+		}
+	}
+
+	function updateIncorrectKeypresses() {
+		totalKeypresses.update((nr) => (nr += 1));
+	}
+
+	function setNextKey() {
+		if ($incorrectInput) {
+			nextKey = 'Backspace';
+		} else if (snippetArr[0] === '\n') {
+			nextKey = 'Enter';
+		} else if (snippetArr[0] === undefined) {
+			nextKey = '';
+		} else if (snippetArr[0] === '\t') {
+			nextKey = 'Tab';
+		} else if (snippetArr[0] === ' ') {
+			nextKey = 'Space';
+		} else {
+			nextKey = snippetArr[0];
+		}
+		return nextKey;
 	}
 </script>
 
 <svelte:window on:keydown={handleKeypress} />
 
 <div class="grid-container">
-	<h1 class="title"><em>this.</em>Type()</h1>
-
-	<h2 class="acc-label">Accuracy</h2>
-	<div class="acc">
-		<Accuracy />
-	</div>
-
-	<h2 class="wpm-label">WPM</h2>
+	<h1 class="title"><em>this</em>.Type()</h1>
+	<!-- <h2 class="wpm-label"><em>this</em>.wpm()</h2> -->
+	<h2 class="wpm-label {$typingMode ? '' : 'yellow'}">WPM</h2>
 	<div class="wpm">
 		<WordsPerMin {wpm} />
 	</div>
-
+	<div class="reset">
+		<button
+			class="btn btn-square no-animation {$typingMode ? '' : 'btn-primary'}"
+			on:click={resetCurrentSnippet}><span class="material-symbols-rounded"> undo </span></button
+		>
+	</div>
+	<!-- <h2 class="reset-label"><em>this</em>.reset()</h2> -->
+	<h2 class="reset-label {$typingMode ? '' : 'yellow'}">RESET</h2>
+	<!-- <h2 class="acc-label"><em>this</em>.accuracy()</h2> -->
+	<h2 class="acc-label {$typingMode ? '' : 'yellow'}">ACCURACY</h2>
+	<div class="acc">
+		<Accuracy />
+	</div>
+	<div class="new">
+		<button
+			class="btn btn-square no-animation {$typingMode ? '' : 'btn-primary'}"
+			on:click={getNewSnippet}><span class="material-symbols-rounded"> sync </span></button
+		>
+	</div>
+	<!-- <h2 class="new-label"><em>this</em>.new()</h2> -->
+	<h2 class="new-label {$typingMode ? '' : 'yellow'}">NEW</h2>
 	{#if nextKey && $typingMode}
-		<h2 class="next-key-label">Next key</h2>
-		<div class="next-key"><kbd class="kbd">{nextKey}</kbd></div>
+		<div class="next-key-group">
+			<!-- <h2 class="next-key-label"><em>this</em>.nextKey()</h2> -->
+			<h2 class="next-key-label">NEXT KEY</h2>
+			<div class="next-key"><kbd class="kbd">{nextKey}</kbd></div>
+		</div>
 	{/if}
-	{#if !$typingMode}
-		<h2 class="instruction" on:click={start}>Click to start typing</h2>
+	{#if !$typingMode && !$finished}
+		<h2 class="instruction" on:click={startTyping}>click to start typing</h2>
 	{/if}
-	<div class="code-snippet" on:click={start}>
+	<div class="code-snippet" on:click={startTyping}>
 		<CodeSnippet {snippetArr} />
-	</div>
-	<div class="restart">
-		<button class="btn btn-primary" on:click={reset}>reset</button>
-	</div>
-	<div class="start">
-		<button class="btn btn-primary" on:click={getAnother}>get new</button>
 	</div>
 </div>
 
 <style>
 	h1 {
-		font-family: 'JetBrains Mono', sans-serif;
+		font-family: 'JetBrains Mono', monospace;
 		font-weight: 800;
 		font-size: 3rem;
+		letter-spacing: -0.1rem;
 		color: #e5c17bff;
-		margin-bottom: 2rem;
-		margin-top: 2rem;
 	}
 
 	h2 {
-		font-family: 'IBM Plex Sans', sans-serif;
+		/* font-family: 'IBM Plex Sans', sans-serif; */
+		font-family: 'JetBrains Mono', monospace;
 		font-size: 1rem;
-		font-weight: 500;
-		align-self: flex-start;
-		justify-self: end;
-		color: #5e6a82;
+		font-weight: 600;
+		/* letter-spacing: 0.05rem; */
+		color: #abb2bf;
 	}
 	.grid-container {
 		max-width: 1280px;
@@ -355,47 +350,61 @@
 		margin: 0 auto;
 		padding: 1rem;
 		display: grid;
-		grid-template-columns: 2fr 7fr 2fr;
-		grid-template-rows: auto auto auto 3.5rem 1fr auto;
+		grid-template-columns: 2fr 5fr 3fr 5fr 2fr;
+		grid-template-rows: auto 3rem 3em 7rem 1fr auto;
 		gap: 1rem;
 	}
 
 	.title {
-		justify-self: flex-start;
-		grid-column: 2/3;
+		margin-bottom: 3rem;
+		margin-top: 6rem;
+		justify-self: center;
+		align-self: center;
+		grid-column: 2/5;
+		grid-row: 1/2;
 	}
 
 	.acc-label {
-		grid-column: 1/2;
+		align-self: center;
+		justify-self: flex-end;
+		grid-column: 2/3;
 		grid-row: 3/4;
 	}
 	.acc {
-		/* margin-bottom: 2rem; */
-		grid-column: 2/3;
+		align-self: center;
+		justify-self: flex-start;
+		grid-column: 3/4;
 		grid-row: 3/4;
 	}
 	.wpm-label {
-		grid-column: 1/2;
-		grid-row: 2/3;
-	}
-	.wpm {
+		align-self: center;
+		justify-self: flex-end;
 		grid-column: 2/3;
 		grid-row: 2/3;
 	}
+	.wpm {
+		align-self: center;
+		justify-self: flex-start;
+		grid-column: 3/4;
+		grid-row: 2/3;
+	}
 	.next-key-label {
-		grid-column: 1/2;
-		grid-row: 4/5;
+		/* font-size: 1.2em; */
+		/* justify-self: center; */
+		align-self: center;
 	}
 	.next-key {
 		font-size: 1.5em;
 		font-weight: 900;
-		justify-self: flex-start;
-		grid-column: 2/3;
-		grid-row: 4/5;
+		align-self: center;
+		/* justify-self: center; */
 	}
 	.code-snippet {
-		justify-self: flex-start;
-		grid-column: 2/3;
+		/* display: flex;
+		flex-direction: column;
+		justify-content: flex-start;
+		align-items: center; */
+		grid-column: 2/5;
 		grid-row: 5/6;
 	}
 	.code-snippet:hover {
@@ -403,27 +412,58 @@
 	}
 	.kbd {
 		color: #272c35;
-		background-color: #5e6a82;
+		background-color: #abb2bf;
 	}
 	.hidden {
 		visibility: hidden;
 	}
-	.restart {
+	.reset {
+		align-self: center;
+		justify-self: flex-end;
 		grid-column: 3/4;
 		grid-row: 2/3;
 	}
-	.start {
+	.new {
+		align-self: center;
+		justify-self: flex-end;
 		grid-column: 3/4;
 		grid-row: 3/4;
 	}
 	.instruction {
+		font-size: 1.5rem;
 		color: #e5c17bff;
 		align-self: center;
 		justify-self: center;
-		grid-column: 2/3;
+		grid-column: 2/5;
 		grid-row: 4/5;
 	}
 	.instruction:hover {
 		cursor: pointer;
+	}
+
+	.reset-label {
+		align-self: center;
+		justify-self: flex-start;
+		grid-column: 4/5;
+		grid-row: 2/3;
+	}
+	.new-label {
+		align-self: center;
+		justify-self: flex-start;
+		grid-column: 4/5;
+		grid-row: 3/4;
+	}
+
+	.next-key-group {
+		display: flex;
+		flex-direction: column;
+		align-self: center;
+		gap: 0.7rem;
+		grid-column: 3/4;
+		grid-row: 4/5;
+	}
+
+	.yellow {
+		color: #e5c17bff;
 	}
 </style>

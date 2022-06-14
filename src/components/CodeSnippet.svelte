@@ -7,33 +7,39 @@
 	import { correctInput, incorrectInput, enterCount, typingMode } from '../stores';
 </script>
 
-<code>
-	<pre class="bottom">{$correctInput}{$incorrectInput}{snippetArr.join('')}</pre>
-</code>
-<code>
-	<pre class="top"><span class="correct"
-			>{$correctInput}<span class="incorrect">{$incorrectInput}</span></span
-		>{#if $typingMode}<span style="top: {$enterCount * 1.5}em" class="caret" />{/if}</pre>
-</code>
+<div class="container">
+	<pre class="bottom">{$correctInput}{$incorrectInput}{#if snippetArr}{snippetArr.join('')}{/if}<pre
+			class="top"><span class="correct"
+				>{$correctInput}<span class="incorrect">{$incorrectInput}</span></span
+			>{#if $typingMode}<span style="top: {$enterCount * 1.5}em" class="caret" />{/if}</pre></pre>
+</div>
 
 <style>
+	.container {
+		display: flex;
+		flex-direction: column;
+		justify-content: flex-start;
+		align-items: center;
+		overflow: scroll;
+	}
 	pre {
-		position: absolute;
 		font-family: 'JetBrains Mono', monospace;
-		font-size: 1.5em;
+		font-size: 1.5rem;
 		font-weight: 600;
 		line-height: 2.25rem;
 		letter-spacing: 0.05rem;
 	}
 
 	.bottom {
+		position: relative;
 		color: #5e6a82;
-		/* position: absolute; */
 	}
 
-	/* .top {
+	.top {
 		position: absolute;
-	} */
+		left: 0;
+		top: 0;
+	}
 
 	.correct {
 		color: #d0d8e9;
