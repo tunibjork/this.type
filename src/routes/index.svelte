@@ -95,7 +95,7 @@
 	function handleKeypress(event) {
 		console.log(event);
 		if ($typingMode && !$activeError) {
-			event.preventDefault();
+			// event.preventDefault();
 			switch (event.key) {
 				case 'Escape':
 				case 'CapsLock':
