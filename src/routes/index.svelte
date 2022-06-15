@@ -97,6 +97,7 @@
 		if ($typingMode && !$activeError) {
 			// event.preventDefault();
 			switch (event.key) {
+				case 'GraphAlt':
 				case 'Escape':
 				case 'CapsLock':
 				case 'Shift':
@@ -177,6 +178,7 @@
 		} else if ($typingMode && $activeError) {
 			// event.preventDefault();
 			switch (event.key) {
+				case 'GraphAlt':
 				case 'Escape':
 				case 'CapsLock':
 				case 'Shift':
