@@ -34,6 +34,7 @@
 	function init() {
 		const random = Math.floor(Math.random() * $codeSnippets.length);
 		snippet = $codeSnippets[random];
+		// snippet = `function deleteDuplicates (arr) {\n\treturn [...new Set(arr)];\n};`;
 		nextKey = snippet[0];
 		snippetArr = snippet.split('');
 	}
@@ -76,7 +77,7 @@
 
 	function startTimer() {
 		startTime.set(Date.now());
-		wpmInterval = setInterval(calculateWpm, 3000);
+		wpmInterval = setInterval(calculateWpm, 1000);
 		timerRunning.set(true);
 	}
 
@@ -92,6 +93,7 @@
 	}
 
 	function handleKeypress(event) {
+		console.log(event);
 		if ($typingMode && !$activeError) {
 			event.preventDefault();
 			switch (event.key) {
@@ -149,6 +151,7 @@
 					break;
 
 				case 'Tab':
+					event.preventDefault();
 					if (snippetArr[0] === '\t') {
 						handleCorrectInput();
 					} else {
@@ -172,7 +175,7 @@
 					}
 			}
 		} else if ($typingMode && $activeError) {
-			event.preventDefault();
+			// event.preventDefault();
 			switch (event.key) {
 				case 'Escape':
 				case 'CapsLock':
@@ -211,6 +214,8 @@
 					break;
 
 				case 'Tab':
+					event.preventDefault();
+
 					incorrectInput.update((prev) => (prev += ' '));
 					updateIncorrectKeypresses();
 					break;
@@ -241,7 +246,7 @@
 		}
 		updateCorrectKeypresses();
 		setNextKey();
-		if ($correctInput.length > 2) {
+		if ($correctInput.length > 4) {
 			calculateWpm();
 		}
 	}
@@ -414,9 +419,7 @@
 		color: #272c35;
 		background-color: #abb2bf;
 	}
-	.hidden {
-		visibility: hidden;
-	}
+
 	.reset {
 		align-self: center;
 		justify-self: flex-end;

@@ -1,5 +1,5 @@
 <script>
-	import { accuracy, typingMode, finished } from '../stores';
+	import { accuracy, typingMode } from '../stores';
 </script>
 
 <h1 class={$typingMode ? '' : 'yellow'}>

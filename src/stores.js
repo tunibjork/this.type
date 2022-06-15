@@ -5,7 +5,9 @@ export const codeSnippets = writable([
 	`function reverseString (str) {\n\treturn str.split(' ').reverse().join(' ');\n};`,
 	`function isPalindrome (str) {\n\treturn str === str.split('').reverse().join('');\n};`,
 	`function shuffleArray (arr) {\n\treturn arr.sort(() => 0.5 - Math.random());\n};`,
-	`function findUniqueValues (arr) {\n\treturn arr.filter(el => {\n\t\treturn arr.indexOf(el) === arr.lastIndexOf(el);\n\t});\n};`
+	`function findUniqueValues (arr) {\n\treturn arr.filter(el => {\n\t\treturn arr.indexOf(el) === arr.lastIndexOf(el);\n\t});\n};`,
+	`const getRandomItem = (arr) => {\n\treturn arr[Math.floor(Math.random() * arr.length)];\n};`,
+	`function deleteDuplicates (arr) {\n\treturn [...new Set(arr)];\n};`
 ]);
 // export const snippet = derived(codeSnippets, ($codeSnippets) => {
 // 	const random = Math.floor(Math.random() * $codeSnippets.length);
