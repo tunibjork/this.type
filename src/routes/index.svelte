@@ -15,11 +15,6 @@
 		timerRunning,
 		startTime,
 		codeSnippets
-		// wpmInterval
-		// wpm
-		// snippet
-		// snippetArr,
-		// nextKey
 	} from '../stores';
 
 	let wpmInterval;
@@ -34,7 +29,6 @@
 	function init() {
 		const random = Math.floor(Math.random() * $codeSnippets.length);
 		snippet = $codeSnippets[random];
-		// snippet = `function deleteDuplicates (arr) {\n\treturn [...new Set(arr)];\n};`;
 		nextKey = snippet[0];
 		snippetArr = snippet.split('');
 	}
@@ -95,7 +89,6 @@
 	function handleKeypress(event) {
 		console.log(event);
 		if ($typingMode && !$activeError) {
-			// event.preventDefault();
 			switch (event.key) {
 				case 'AltGraph':
 				case 'Escape':
@@ -121,7 +114,6 @@
 				case 'F11':
 				case 'F12':
 				case 'Dead':
-					// case 'Backspace':
 					break;
 
 				case 'Backspace':
@@ -176,7 +168,6 @@
 					}
 			}
 		} else if ($typingMode && $activeError) {
-			// event.preventDefault();
 			switch (event.key) {
 				case 'AltGraph':
 				case 'Escape':
@@ -293,7 +284,6 @@
 
 <div class="grid-container">
 	<h1 class="title"><em>this</em>.Type()</h1>
-	<!-- <h2 class="wpm-label"><em>this</em>.wpm()</h2> -->
 	<h2 class="wpm-label {$typingMode ? '' : 'yellow'}">WPM</h2>
 	<div class="wpm">
 		<WordsPerMin {wpm} />
@@ -304,9 +294,7 @@
 			on:click={resetCurrentSnippet}><span class="material-symbols-rounded"> undo </span></button
 		>
 	</div>
-	<!-- <h2 class="reset-label"><em>this</em>.reset()</h2> -->
 	<h2 class="reset-label {$typingMode ? '' : 'yellow'}">RESET</h2>
-	<!-- <h2 class="acc-label"><em>this</em>.accuracy()</h2> -->
 	<h2 class="acc-label {$typingMode ? '' : 'yellow'}">ACCURACY</h2>
 	<div class="acc">
 		<Accuracy />
@@ -317,11 +305,9 @@
 			on:click={getNewSnippet}><span class="material-symbols-rounded"> sync </span></button
 		>
 	</div>
-	<!-- <h2 class="new-label"><em>this</em>.new()</h2> -->
 	<h2 class="new-label {$typingMode ? '' : 'yellow'}">NEW</h2>
 	{#if nextKey && $typingMode}
 		<div class="next-key-group">
-			<!-- <h2 class="next-key-label"><em>this</em>.nextKey()</h2> -->
 			<h2 class="next-key-label">NEXT KEY</h2>
 			<div class="next-key"><kbd class="kbd">{nextKey}</kbd></div>
 		</div>
@@ -344,11 +330,9 @@
 	}
 
 	h2 {
-		/* font-family: 'IBM Plex Sans', sans-serif; */
 		font-family: 'JetBrains Mono', monospace;
 		font-size: 1rem;
 		font-weight: 600;
-		/* letter-spacing: 0.05rem; */
 		color: #abb2bf;
 	}
 	.grid-container {
@@ -396,21 +380,14 @@
 		grid-row: 2/3;
 	}
 	.next-key-label {
-		/* font-size: 1.2em; */
-		/* justify-self: center; */
 		align-self: center;
 	}
 	.next-key {
 		font-size: 1.5em;
 		font-weight: 900;
 		align-self: center;
-		/* justify-self: center; */
 	}
 	.code-snippet {
-		/* display: flex;
-		flex-direction: column;
-		justify-content: flex-start;
-		align-items: center; */
 		grid-column: 2/5;
 		grid-row: 5/6;
 	}

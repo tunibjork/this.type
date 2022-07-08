@@ -1,6 +1,5 @@
 <script>
 	import { typingMode } from '../stores';
-	// import { wpm } from '../stores';
 	export let wpm;
 </script>
 

@@ -9,16 +9,6 @@ export const codeSnippets = writable([
 	`const getRandomItem = (arr) => {\n\treturn arr[Math.floor(Math.random() * arr.length)];\n};`,
 	`function deleteDuplicates (arr) {\n\treturn [...new Set(arr)];\n};`
 ]);
-// export const snippet = derived(codeSnippets, ($codeSnippets) => {
-// 	const random = Math.floor(Math.random() * $codeSnippets.length);
-// 	return $codeSnippets[random];
-// });
-// export const snippetArr = derived(snippet, ($snippet) => {
-// 	return $snippet.split('');
-// });
-// export const nextKey = derived(snippetArr, ($snippetArr) => {
-// 	return $snippetArr[0];
-// });
 
 export const correctInput = writable('');
 export const incorrectInput = writable('');
@@ -33,7 +23,6 @@ export const finished = writable(false);
 
 export const timerRunning = writable(false);
 export const startTime = writable();
-// export const wpmInterval = writable();
 
 export const accuracy = derived(
 	[correctKeypresses, totalKeypresses],
@@ -41,8 +30,3 @@ export const accuracy = derived(
 		return ($correctKeypresses / $totalKeypresses) * 100;
 	}
 );
-
-// export const wpm = derived([startTime, correctKeypresses], ([$startTime, $correctKeypresses]) => {
-// 	const elapsedMinutes = (Date.now() - $startTime) / 1000 / 60;
-// 	return $correctKeypresses / 5 / elapsedMinutes;
-// });

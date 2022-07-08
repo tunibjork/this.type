@@ -1,9 +1,5 @@
 <script>
-	// export let correctInput;
-	// export let incorrectInput;
 	export let snippetArr;
-	// export let typingMode;
-	// export let enterCount;
 	import { correctInput, incorrectInput, enterCount, typingMode } from '../stores';
 </script>
 
